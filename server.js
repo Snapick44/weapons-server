@@ -83,6 +83,26 @@ app.post('/weapons', checkAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Ошибка (возможно, такой ID уже есть)' }); }
 });
 
+// --- УДАЛИТЬ ОРУЖИЕ ---
+app.delete('/weapons/:id', checkAuth, async (req, res) => {
+  try {
+    await db.execute({ sql: 'DELETE FROM weapons WHERE id = ?', args: [req.params.id] });
+    res.json({ message: 'Оружие удалено' });
+  } catch (err) { res.status(500).json({ error: 'Ошибка удаления' }); }
+});
+
+// --- ОБНОВИТЬ ОРУЖИЕ (Редактирование) ---
+app.put('/weapons/:id', checkAuth, async (req, res) => {
+  try {
+    const { name, country, year, creator, specs, history, facts } = req.body;
+    await db.execute({
+      sql: 'UPDATE weapons SET name=?, country=?, year=?, creator=?, specs=?, history=?, facts=? WHERE id=?',
+      args: [name, country || '', year || '', creator || '', JSON.stringify(specs || []), history || '', JSON.stringify(facts || []), req.params.id]
+    });
+    res.json({ message: 'Оружие обновлено' });
+  } catch (err) { res.status(500).json({ error: 'Ошибка обновления' }); }
+});
+
 // --- СОХРАНИТЬ ССЫЛКУ НА ФОТО В БАЗУ ---
 app.post('/weapons/:id/photos', checkAuth, async (req, res) => {
   try {
@@ -108,7 +128,6 @@ const upload = multer({ storage: storage });
 app.post('/upload', checkAuth, upload.single('photo'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
   
-  // Универсальная ссылка, которая работает и локально, и на хостинге
   const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   res.json({ url: fileUrl });
 });
