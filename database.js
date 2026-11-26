@@ -1,9 +1,8 @@
 const { createClient } = require('@libsql/client');
 
-// ВСТАВЬ СВОИ ЗНАЧЕНИЯ СЮДА
 const db = createClient({
-  url: "libsql://weapons-db-snapick44.aws-eu-west-1.turso.io", 
-  authToken: "ТВОЙ_ДЛИННЫЙ_ТОКЕН_СЮДА", 
+  url: "ТВОЙ_URL_ИЗ_TURSO", 
+  authToken: "ТВОЙ_ТОКЕН_ИЗ_TURSO", 
 });
 
 async function initDB() {
@@ -29,11 +28,8 @@ async function initDB() {
       )
     `);
     console.log('Таблицы в Turso успешно проверены/созданы');
-  } catch (e) {
-    console.error('Ошибка при создании таблиц:', e);
-  }
+  } catch (e) { console.error('Ошибка при создании таблиц:', e); }
 }
 
 initDB();
-
 module.exports = db;
