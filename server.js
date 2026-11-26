@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-const SECRET_KEY = 'super_secret_key_123';
+const SECRET_KEY = 'super_secret_key_123'; // Тот самый ключ
 
 // --- РЕГИСТРАЦИЯ ---
 app.post('/register', async (req, res) => {
@@ -80,7 +80,7 @@ app.post('/weapons', checkAuth, async (req, res) => {
       args: [id, name, country || '', year || '', creator || '', JSON.stringify(specs || []), history || '', JSON.stringify(facts || []), '[]']
     });
     res.json({ message: 'Оружие успешно добавлено!' });
-  } catch (err) { res.status(500).json({ error: 'Ошибка (возможно, такой ID уже есть)' }); }
+  } catch (err) { res.status(500).json({ error: 'Ошибка при добавлении (возможно, такой ID уже есть)' }); }
 });
 
 // --- УДАЛИТЬ ОРУЖИЕ ---
@@ -91,7 +91,7 @@ app.delete('/weapons/:id', checkAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Ошибка удаления' }); }
 });
 
-// --- ОБНОВИТЬ ОРУЖИЕ (Редактирование) ---
+// --- ОБНОВИТЬ ОРУЖИЕ ---
 app.put('/weapons/:id', checkAuth, async (req, res) => {
   try {
     const { name, country, year, creator, specs, history, facts } = req.body;
@@ -103,22 +103,7 @@ app.put('/weapons/:id', checkAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Ошибка обновления' }); }
 });
 
-// --- СОХРАНИТЬ ССЫЛКУ НА ФОТО В БАЗУ ---
-app.post('/weapons/:id/photos', checkAuth, async (req, res) => {
-  try {
-    const { photoUrl } = req.body;
-    const result = await db.execute({ sql: 'SELECT photos FROM weapons WHERE id = ?', args: [req.params.id] });
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Оружие не найдено' });
-    
-    let photos = JSON.parse(result.rows[0].photos || '[]');
-    photos.push(photoUrl);
-    
-    await db.execute({ sql: 'UPDATE weapons SET photos = ? WHERE id = ?', args: [JSON.stringify(photos), req.params.id] });
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Ошибка сохранения' }); }
-});
-
-// --- ЗАГРУЗКА ФАЙЛА ФОТО НА СЕРВЕР ---
+// --- ЗАГРУЗКА ФОТО ---
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
@@ -127,7 +112,6 @@ const upload = multer({ storage: storage });
 
 app.post('/upload', checkAuth, upload.single('photo'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
-  
   const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   res.json({ url: fileUrl });
 });
